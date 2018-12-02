@@ -32,18 +32,20 @@ class CNNModel(nn.Module):
                 *block(self.args.img_depth,16),
                 *block(16,32),
                 *block(32,64),
-                *block(64,32),
-                *block(32,1)
+                *block(64,32)
                 )
         
         self.activation = nn.Sequential(nn.Sigmoid())
+        self.linear = nn.Linear(128, 10)
         
     def forward(self,imgs):
         logits = self.conv_1(imgs)
+        logits = logits.view(self.args.batch_size,-1)
+        logits = self.linear(logits)
         logits = logits.contiguous()
         
         output = self.activation(logits)
-        logits = logits.view(-1)
+        
         return output
     
 

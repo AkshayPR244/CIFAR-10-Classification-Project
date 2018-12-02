@@ -8,10 +8,10 @@ Created on Sat Nov 17 16:23:01 2018
 import numpy as np
 import os
 import torch
-import torchvision.transforms as transforms
+#import torchvision.transforms as transforms
 from torchvision.utils import save_image
 #from torch.utils.data import DataLoader
-from torchvision import datasets
+from torchvision import datasets, models, transforms
 from torch.autograd import Variable
 from get_args import get_args
 
@@ -44,6 +44,7 @@ if __name__ == '__main__':
 
     # Loss function, we just use BCE this time.
     CELoss = torch.nn.CrossEntropyLoss()
+    #BCELoss = torch.nn.BinarycrossEntropyLoss()
     
     ##########################################################
     ## SETUP CLASSIFIER STRUCTURE ############################
@@ -53,6 +54,7 @@ if __name__ == '__main__':
         
     
     classifier = Classifier(args)
+    #classifier = models.resnet18(pretrained = True)
     
     if cuda:
         classifier.cuda()
@@ -102,6 +104,8 @@ if __name__ == '__main__':
         #load data once for each epoch
         for i, (imgs, labels) in enumerate(train_dataloader):
             
+            imgs = imgs.to(device)
+            labels = labels.to(device)
             #check for batch size disorder
             if labels.shape[0]!=args.batch_size:
                 continue
@@ -110,18 +114,19 @@ if __name__ == '__main__':
             imgset = Variable(imgs.type(Tensor), requires_grad=True)
             labelset = Variable(labels.type(Tensor), requires_grad=True)
             
-            #intialize optimizer
-            optimizer.zero_grad()
+            
             
             for idx in range(args.num_train):
                 
+                #intialize optimizer
+                optimizer.zero_grad()
                 output = classifier(imgs)
                 loss = CELoss(output,labels)
                 loss.backward(retain_graph=False)
                 optimizer.step()
                 
             if i%100 == 0:
-                print ("[Epoch %d/%d] [Batch %d/%d] [Loss: %f]" % (epoch, args.num_epoch, i, len(train_dataloader),loss.item()))
+                print ("[Epoch %d/%d] [Batch %d/%d] [Loss: %f]" % (epoch, args.num_epochs, i, len(train_dataloader),loss.item()))
                 
             
     ##########################################################
